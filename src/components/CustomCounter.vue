@@ -46,8 +46,5 @@ export default {
       this.$emit("update:modelValue", +val > 0 ? +val : 0);
     },
   },
-  mounted() {
-    console.log(this.valueCounter);
-  },
 };
 </script>

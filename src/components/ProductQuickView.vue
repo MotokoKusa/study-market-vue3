@@ -1,13 +1,9 @@
 <template>
-  <div v-if="productsLoading">
+  <div v-if="productStatus.isLoading">
     <preloader-pic />
   </div>
-  <div v-else-if="!productsData">Не удалось загрузить товар</div>
+  <div v-else-if="productStatus.isFailed">Не удалось загрузить товар</div>
   <div v-else>
-    <div class="content__top">
-      <base-breadcrumbs :crumbs="breadcrumbsData" />
-    </div>
-
     <section class="item">
       <div class="item__pics pics">
         <div class="pics__wrapper">
@@ -29,9 +25,9 @@
             class="form"
             action="#"
             method="POST"
-            @submit.prevent="addToCart()"
+            @submit.prevent="doAddToCart(product.id, productAmount)"
           >
-            <b class="item__price"> {{ productPrice }} ₽ </b>
+            <b class="item__price"> {{ product.productPrice }} ₽ </b>
 
             <fieldset class="form__block">
               <legend class="form__legend">Цвет:</legend>
@@ -98,18 +94,18 @@
             <div class="item__row">
               <custom-counter v-model="productAmount" />
               <button
-                :disabled="productAddSending"
+                :disabled="addingStatus.isSending"
                 class="button button--primery"
                 type="submit"
               >
                 В корзину
               </button>
             </div>
-            <base-modal v-model:open="productAdded">
+            <base-modal v-model:open="addingStatus.isAdded">
               Товар добавлен в корзину
             </base-modal>
-            <div v-if="productAdded">Товар добавлен в корзину</div>
-            <div v-if="productAddSending">Добавляем товар в корзину</div>
+            <div v-if="addingStatus.isAdded">Товар добавлен в корзину</div>
+            <div v-if="addingStatus.isSending">Добавляем товар в корзину</div>
           </form>
         </div>
       </div>
@@ -177,88 +173,54 @@
 </template>
 
 <script>
-import axios from "axios";
-import { API_BASE_URL } from "@/config";
 import PreloaderPic from "@/components/PreloaderPic";
 import CustomCounter from "@/components/CustomCounter";
-import BaseBreadcrumbs from "@/components/BaseBreadcrumbs";
 import BaseModal from "@/components/BaseModal";
-import numberFormat from "@/helpers/numberFormat";
-import { mapActions } from "vuex";
+import { computed, defineComponent, ref } from "vue";
+import useProduct from "@/hooks/useProduct";
 
-export default {
-  name: "ProductQuickView",
+export default defineComponent({
   components: {
     CustomCounter,
     PreloaderPic,
-    BaseBreadcrumbs,
     BaseModal,
-  },
-  data() {
-    return {
-      productAmount: 1,
-      productsData: null,
-      productsLoading: false,
-      productsLoadingFailed: false,
-      productAdded: false,
-      productAddSending: false,
-    };
   },
   props: {
     productId: { type: [Number, String], required: true },
   },
-  computed: {
-    productPrice() {
-      return numberFormat(this.product.price);
-    },
-    product() {
-      return Object.assign(this.productsData, {
-        imageSrc: this.productsData.image.file.url,
-      });
-    },
-    category() {
-      return this.productsData.category;
-    },
+  setup(props) {
+    const {
+      product,
+      category,
+      fetchProduct,
+      fetchStatus: productStatus,
+      addingStatus,
+      addProduct: doAddToCart,
+    } = useProduct();
 
-    breadcrumbsData() {
+    const productAmount = ref(1);
+    const breadcrumbsData = computed(() => {
       return [
         { title: "Каталог", name: "main" },
-        { title: this.category.title, name: "main" },
-        { title: this.product.title, name: "" },
+        { title: category.value.title, name: "main" },
+        { title: product.value.title, name: "" },
       ];
-    },
-  },
-  methods: {
-    ...mapActions(["addProductToCart"]),
-    addToCart() {
-      this.productAdded = false;
-      this.productAddSending = true;
+    });
 
-      this.addProductToCart({
-        productId: this.product.id,
-        quantity: this.productAmount,
-      }).then(() => {
-        this.productAdded = true;
-        this.productAddSending = false;
-      });
-    },
-    loadProduct() {
-      this.productsLoading = true;
-      this.productsLoadingFailed = false;
-      axios
-        .get(API_BASE_URL + "/api/products/" + this.productId)
-        .then((response) => (this.productsData = response.data))
-        .catch(() => (this.productsLoadingFailed = true))
-        .then(() => (this.productsLoading = false));
-    },
+    fetchProduct(props.productId);
+
+    return {
+      productAmount,
+      productsData: product,
+      productStatus,
+      product,
+      category,
+      breadcrumbsData,
+      addingStatus,
+      doAddToCart,
+    };
   },
-  created() {
-    this.loadProduct();
-  },
-  beforeRouteUpdate() {
-    this.loadProduct();
-  },
-};
+});
 </script>
 
 <style lang="scss" scoped>
