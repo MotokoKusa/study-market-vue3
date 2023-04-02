@@ -22,9 +22,9 @@
     <button
       v-if="isButton"
       class="cart__button button button--primery"
-      type="submit"
+      type="button"
       :disabled="disabled"
-      @click="onClick"
+      @click.prevent="onClick"
     >
       Оформить заказ
     </button>
@@ -33,8 +33,9 @@
 
 <script>
 import numberFormat from "@/helpers/numberFormat";
-export default {
-  name: "BaseCartBlock",
+import { computed, defineComponent } from "vue";
+
+export default defineComponent({
   props: {
     cartData: {
       type: Object,
@@ -49,32 +50,29 @@ export default {
       default: false,
     },
   },
-  computed: {
-    costDelivery() {
-      return this.cartData?.costDelivery || null;
-    },
-    totalAmount() {
-      return this.cartData?.totalAmount || null;
-    },
-    totalPrice() {
-      return this.cartData?.totalPrice || null;
-    },
-    isCartTotal() {
-      return this.totalAmount && this.totalPrice;
-    },
-    products() {
-      return this.cartData?.products || [];
-    },
-  },
 
-  methods: {
-    onClick() {
-      this.$emit("click");
-    },
-    totalPriceProduct(item) {
+  setup(props, { emit }) {
+    const costDelivery = computed(() => props.cartData?.costDelivery || null);
+    const totalAmount = computed(() => props.cartData?.totalAmount || null);
+    const totalPrice = computed(() => props.cartData?.totalPrice || null);
+    const isCartTotal = computed(() => totalAmount.value && totalPrice.value);
+    const products = computed(() => props.cartData?.products || []);
+
+    const onClick = () => emit("onClick");
+    const totalPriceProduct = (item) => {
       const total = item.product.price * item.quantity;
       return numberFormat(total);
-    },
+    };
+
+    return {
+      costDelivery,
+      totalAmount,
+      totalPrice,
+      isCartTotal,
+      products,
+      onClick,
+      totalPriceProduct,
+    };
   },
-};
+});
 </script>

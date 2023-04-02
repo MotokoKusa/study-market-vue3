@@ -9,8 +9,9 @@
 </template>
 
 <script>
-import formFieldMixin from "@/mixins/formFieldMixin";
-export default {
+import { computed, defineComponent } from "vue";
+import BaseFormField from "@/components/BaseFormField";
+export default defineComponent({
   name: "BaseFormTextarea",
   props: {
     title: {
@@ -25,11 +26,27 @@ export default {
       type: String,
       default: "",
     },
-    value: {
+    modelValue: {
       type: String,
       default: "",
     },
   },
-  mixins: [formFieldMixin],
-};
+  components: {
+    BaseFormField,
+  },
+  setup(props, { emit }) {
+    const dataValue = computed({
+      get() {
+        return props.modelValue;
+      },
+      set(value) {
+        emit("update:modelValue", value);
+      },
+    });
+
+    return {
+      dataValue,
+    };
+  },
+});
 </script>

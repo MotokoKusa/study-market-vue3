@@ -20,23 +20,21 @@
 
 <script>
 import CartIndicator from "@/components/CartIndicator";
-import { mapActions, mapMutations } from "vuex";
+import { useStore } from "vuex";
+import { defineComponent } from "vue";
 
-export default {
-  name: "SHeader",
+export default defineComponent({
   components: {
     CartIndicator,
   },
-  created() {
+
+  setup() {
+    const store = useStore();
     const userAccessKey = localStorage.getItem("userAccessKey");
     if (userAccessKey) {
-      this.updateUserAccessKey(userAccessKey);
+      store.commit("updateUserAccessKey", userAccessKey);
     }
-    this.loadCart();
+    store.dispatch("loadCart");
   },
-  methods: {
-    ...mapActions(["loadCart"]),
-    ...mapMutations(["updateUserAccessKey"]),
-  },
-};
+});
 </script>

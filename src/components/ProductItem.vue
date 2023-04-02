@@ -35,46 +35,49 @@
 <script>
 import numberFormat from "@/helpers/numberFormat";
 import BaseModal from "@/components/BaseModal";
-import { defineAsyncComponent } from "vue";
+import { computed, defineAsyncComponent, defineComponent, ref } from "vue";
 
-export default {
-  name: "productItem",
+export default defineComponent({
   components: {
     BaseModal,
     ProductQuickView: defineAsyncComponent({
       loader: () => import("@/components/ProductQuickView"),
     }),
   },
-  data() {
-    return {
-      color: null,
-      currentProductId: null,
-    };
-  },
   props: {
     item: {
       type: Object,
     },
   },
-  computed: {
-    isQuickViewOpen: {
+  setup(props) {
+    const color = ref(null);
+    const currentProductId = ref(null);
+
+    const isQuickViewOpen = computed({
       get() {
-        return !!this.currentProductId;
+        return !!currentProductId.value;
       },
       set(isOpen) {
         if (!isOpen) {
-          this.currentProductId = null;
+          currentProductId.value = null;
         }
       },
-    },
-    price() {
-      return numberFormat(this.item.price);
-    },
+    });
+    const price = computed(() => {
+      return numberFormat(props.item.price);
+    });
+
+    const openVisionQuickView = (productId) => {
+      currentProductId.value = productId;
+    };
+
+    return {
+      color,
+      isQuickViewOpen,
+      price,
+      openVisionQuickView,
+      currentProductId,
+    };
   },
-  methods: {
-    openVisionQuickView(productId) {
-      this.currentProductId = productId;
-    },
-  },
-};
+});
 </script>

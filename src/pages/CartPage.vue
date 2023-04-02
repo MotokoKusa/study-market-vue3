@@ -50,41 +50,53 @@
 import PreloaderPic from "@/components/PreloaderPic";
 import wordFormat from "@/helpers/wordFormat";
 import numberFormat from "@/helpers/numberFormat";
-import { mapGetters } from "vuex";
+import { useStore } from "vuex";
 import CartItem from "@/components/CartItem";
 import BaseBreadcrumbs from "@/components/BaseBreadcrumbs";
+import { computed, defineComponent } from "vue";
 
-export default {
-  name: "CartPage",
+export default defineComponent({
   components: {
     CartItem,
     PreloaderPic,
     BaseBreadcrumbs,
   },
-  computed: {
-    totalPriceFormat() {
-      return numberFormat(this.totalPrice);
-    },
-    messageCartAmount() {
-      let wordsCart = ["товар", "товара", "товаров"];
-      return this.totalAmount + " " + wordFormat(this.totalAmount, wordsCart);
-    },
-    breadcrumbsData() {
+  setup() {
+    const store = useStore();
+    const totalPrice = computed(() => store.getters.cartTotalPrice);
+    const totalPriceFormat = computed(() => {
+      return numberFormat(totalPrice.value);
+    });
+
+    const breadcrumbsData = computed(() => {
       return [
         { title: "Каталог", name: "main" },
         { title: "Корзина", name: "" },
       ];
-    },
-    ...mapGetters({
-      products: "cartDetailProducts",
-      totalPrice: "cartTotalPrice",
-      totalAmount: "cartTotalAmount",
-      cartLoading: "isCartLoading",
-      cartLoadingFailed: "isCartLoadingFailed",
-    }),
+    });
+
+    const products = computed(() => store.getters.cartDetailProducts);
+
+    const totalAmount = computed(() => store.getters.cartTotalAmount);
+    const messageCartAmount = computed(() => {
+      let wordsCart = ["товар", "товара", "товаров"];
+      return totalAmount.value + " " + wordFormat(totalAmount.value, wordsCart);
+    });
+
+    const cartLoading = computed(() => store.getters.isCartLoading);
+    const cartLoadingFailed = computed(() => store.getters.isCartLoadingFailed);
+
+    return {
+      totalPriceFormat,
+      messageCartAmount,
+      breadcrumbsData,
+      products,
+      totalPrice,
+      totalAmount,
+      cartLoading,
+      cartLoadingFailed,
+      wordFormat,
+    };
   },
-  methods: {
-    wordFormat,
-  },
-};
+});
 </script>

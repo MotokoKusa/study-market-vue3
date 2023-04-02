@@ -6,9 +6,9 @@
 
 <script>
 import ProductItem from "@/components/ProductItem.vue";
+import { defineComponent } from "vue";
 
-export default {
-  name: "productList",
+export default defineComponent({
   components: {
     ProductItem,
   },
@@ -17,5 +17,5 @@ export default {
       type: Array,
     },
   },
-};
+});
 </script>

@@ -7,13 +7,7 @@
       <span class="content__info"> 3 товара </span>
     </div>
     <section class="cart">
-      <form
-        class="cart__form form"
-        action="#"
-        method="POST"
-        :disabled="isSending"
-        @submit.prevent="order"
-      >
+      <form class="cart__form form">
         <div class="cart__field" v-if="!isSending">
           <div class="cart__data">
             <base-form-text
@@ -115,7 +109,7 @@
           :cart-data="cartData"
           :is-button="true"
           :disabled="isSending"
-          @click="order"
+          @on-click="sendOrder"
         />
         <div class="cart__error form__error-block" v-if="formErrorMessage">
           <h4>Заявка не отправлена!</h4>
@@ -132,12 +126,13 @@ import BaseFormTextarea from "@/components/BaseFormTextarea";
 import PreloaderPic from "@/components/PreloaderPic";
 import BaseCartBlock from "@/components/BaseCartBlock";
 import BaseBreadcrumbs from "@/components/BaseBreadcrumbs";
-import { mapGetters } from "vuex";
+import { useStore } from "vuex";
 import axios from "axios";
 import { API_BASE_URL } from "@/config";
+import { computed, defineComponent, reactive, ref } from "vue";
+import router from "@/router";
 
-export default {
-  name: "OrderPage",
+export default defineComponent({
   components: {
     BaseBreadcrumbs,
     BaseFormText,
@@ -145,68 +140,75 @@ export default {
     PreloaderPic,
     BaseCartBlock,
   },
-  data() {
-    return {
-      formData: {},
-      formError: {},
-      formErrorMessage: "",
-      costDelivery: 500,
-      isSending: false,
-    };
-  },
-  computed: {
-    cartData() {
+
+  setup() {
+    const store = useStore();
+    const formData = reactive({});
+    const costDelivery = ref(500);
+
+    const products = computed(() => store.getters.cartDetailProducts);
+    const totalAmount = computed(() => store.getters.cartTotalAmount);
+    const totalPrice = computed(() => store.getters.cartTotalPrice);
+
+    const cartData = computed(() => {
       return {
-        products: this.products,
-        costDelivery: this.costDelivery,
-        totalAmount: this.totalAmount,
-        totalPrice: this.totalPrice,
+        products: products.value,
+        costDelivery: costDelivery.value,
+        totalAmount: totalAmount.value,
+        totalPrice: totalPrice.value,
       };
-    },
-    breadcrumbsData() {
+    });
+    const breadcrumbsData = computed(() => {
       return [
         { title: "Каталог", name: "main" },
         { title: "Корзина", name: "cart" },
         { title: "Оформление заказа", name: "" },
       ];
-    },
-    ...mapGetters({
-      products: "cartDetailProducts",
-      totalAmount: "cartTotalAmount",
-      totalPrice: "cartTotalPrice",
-    }),
-  },
-  methods: {
-    order() {
-      this.isSending = true;
-      this.formError = {};
+    });
+
+    const formError = ref({});
+    const formErrorMessage = ref("");
+    const isSending = ref(false);
+
+    const sendOrder = () => {
+      isSending.value = true;
+      formError.value = {};
       axios
         .post(
           API_BASE_URL + "/api/orders",
           {
-            ...this.formData,
+            ...formData,
           },
           {
             params: {
-              userAccessKey: this.$store.state.userAccessKey,
+              userAccessKey: store.state.userAccessKey,
             },
           }
         )
         .then((response) => {
-          setTimeout(() => (this.isSending = false), 1000);
-          this.$store.commit("resetCart");
-          this.$store.commit("updateOrderInfo", response.data);
-          this.$router.push({
+          setTimeout(() => (isSending.value = false), 1000);
+          store.commit("resetCart");
+          store.commit("updateOrderInfo", response.data);
+          router.replace({
             name: "orderInfo",
             params: { id: response.data.id },
           });
         })
         .catch((error) => {
-          setTimeout(() => (this.isSending = false), 1000);
-          this.formError = error.response.data.error.request || {};
-          this.formErrorMessage = error.response.data.error.message || "";
+          setTimeout(() => (isSending.value = false), 1000);
+          formError.value = error.response.data.error.request || {};
+          formErrorMessage.value = error.response.data.error.message || "";
         });
-    },
+    };
+    return {
+      cartData,
+      breadcrumbsData,
+      sendOrder,
+      formData,
+      isSending,
+      formError,
+      formErrorMessage,
+    };
   },
-};
+});
 </script>

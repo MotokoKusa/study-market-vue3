@@ -10,15 +10,48 @@
 </template>
 
 <script>
-import formFieldMixin from "@/mixins/formFieldMixin";
-export default {
+import { computed, defineComponent } from "vue";
+import BaseFormField from "@/components/BaseFormField";
+export default defineComponent({
   name: "BaseFormText",
   props: {
+    title: {
+      type: String,
+      default: "",
+    },
+    placeholder: {
+      type: String,
+      default: "",
+    },
+    error: {
+      type: String,
+      default: "",
+    },
+    modelValue: {
+      type: String,
+      default: "",
+    },
     type: {
       type: String,
       default: "text",
     },
   },
-  mixins: [formFieldMixin],
-};
+  components: {
+    BaseFormField,
+  },
+  setup(props, { emit }) {
+    const dataValue = computed({
+      get() {
+        return props.modelValue;
+      },
+      set(value) {
+        emit("update:modelValue", value);
+      },
+    });
+
+    return {
+      dataValue,
+    };
+  },
+});
 </script>

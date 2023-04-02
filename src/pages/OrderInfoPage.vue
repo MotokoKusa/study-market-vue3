@@ -13,7 +13,9 @@
         </li>
       </ul>
 
-      <h1 class="content__title">Заказ оформлен <span>№ 23621</span></h1>
+      <h1 class="content__title">
+        Заказ оформлен <span>№ {{ orderInfo?.basket?.id }}</span>
+      </h1>
     </div>
 
     <section class="cart">
@@ -45,53 +47,60 @@
 
 <script>
 import BaseCartBlock from "@/components/BaseCartBlock";
-import { mapGetters } from "vuex";
+import { useStore } from "vuex";
+import { computed, defineComponent, ref } from "vue";
+import { useRoute } from "vue-router/dist/vue-router";
 
-export default {
-  name: "OrderInfoPage",
+export default defineComponent({
   components: {
     BaseCartBlock,
   },
-  data() {
-    return {
-      costDelivery: 500,
-    };
-  },
-  computed: {
-    cartData() {
+  setup() {
+    const costDelivery = ref(500);
+    const store = useStore();
+    const route = useRoute();
+    const orderInfo = computed(() => store.getters.orderInfo);
+    const products = computed(() => {
+      return orderInfo.value?.basket.items || [];
+    });
+    const totalAmount = computed(() => {
+      return products.value.reduce((amount, elem) => amount + elem.quantity, 0);
+    });
+
+    const totalPrice = computed(() => {
+      return orderInfo.value?.totalPrice;
+    });
+
+    const cartData = computed(() => {
       return {
-        products: this.products,
-        costDelivery: this.costDelivery,
-        totalAmount: this.totalAmount,
-        totalPrice: this.totalPrice,
+        products: products.value,
+        costDelivery: costDelivery.value,
+        totalAmount: totalAmount.value,
+        totalPrice: totalPrice.value,
       };
-    },
-    infoBuyer() {
+    });
+    const infoBuyer = computed(() => {
       return [
-        { title: "Получатель", description: this.orderInfo?.name || "" },
-        { title: "Адрес доставки", description: this.orderInfo?.address || "" },
-        { title: "Телефон", description: this.orderInfo?.phone || "" },
-        { title: "Email", description: this.orderInfo?.email || "" },
+        { title: "Получатель", description: orderInfo.value?.name || "" },
+        {
+          title: "Адрес доставки",
+          description: orderInfo.value?.address || "",
+        },
+        { title: "Телефон", description: orderInfo.value?.phone || "" },
+        { title: "Email", description: orderInfo.value?.email || "" },
         { title: "Способ оплаты", description: "картой при получении" },
       ];
-    },
-    products() {
-      return this.orderInfo?.basket.items || [];
-    },
-    totalAmount() {
-      return this.products.reduce((amount, elem) => amount + elem.quantity, 0);
-    },
-    totalPrice() {
-      return this.orderInfo?.totalPrice;
-    },
+    });
 
-    ...mapGetters(["orderInfo"]),
-  },
-  created() {
-    if (this.orderInfo && this.orderInfo.id === this.$route.params.id) {
-      return;
+    if (!orderInfo.value && orderInfo.value?.id !== +route.params.id) {
+      store.dispatch("loadOrderInfo", route.params.id);
     }
-    this.$store.dispatch("loadOrderInfo", this.$route.params.id);
+
+    return {
+      infoBuyer,
+      cartData,
+      orderInfo,
+    };
   },
-};
+});
 </script>

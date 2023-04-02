@@ -33,18 +33,17 @@
 </template>
 
 <script>
-export default {
-  name: "CustomCounter",
+import { computed, defineComponent } from "vue";
+
+export default defineComponent({
   props: ["modelValue"],
-  computed: {
-    valueCounter() {
-      return this.modelValue || 1;
-    },
+  setup(props, { emit }) {
+    const valueCounter = computed(() => props.modelValue || 1);
+    const updateValue = (val) => emit("update:modelValue", +val > 0 ? +val : 0);
+    return {
+      valueCounter,
+      updateValue,
+    };
   },
-  methods: {
-    updateValue(val) {
-      this.$emit("update:modelValue", +val > 0 ? +val : 0);
-    },
-  },
-};
+});
 </script>

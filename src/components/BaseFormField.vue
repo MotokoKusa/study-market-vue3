@@ -7,8 +7,9 @@
 </template>
 
 <script>
-export default {
-  name: "BaseFormField",
+import { defineComponent } from "vue";
+
+export default defineComponent({
   props: {
     title: {
       type: String,
@@ -19,5 +20,5 @@ export default {
       default: "",
     },
   },
-};
+});
 </script>

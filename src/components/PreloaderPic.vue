@@ -2,12 +2,6 @@
   <div class="loader">loading</div>
 </template>
 
-<script>
-export default {
-  name: "PreloaderPic",
-};
-</script>
-
 <style scoped>
 .loader {
   overflow: hidden;

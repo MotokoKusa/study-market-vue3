@@ -96,9 +96,3 @@
     </div>
   </footer>
 </template>
-
-<script>
-export default {
-  name: "SFooter",
-};
-</script>

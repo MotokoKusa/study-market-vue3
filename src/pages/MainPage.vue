@@ -37,85 +37,87 @@ import axios from "axios";
 import ProductList from "@/components/ProductList.vue";
 import BasePagination from "@/components/BasePagination";
 import ProductFilter from "@/components/ProductFilter";
+import { computed, defineComponent, ref, watch } from "vue";
 
-export default {
-  name: "MainPage",
+export default defineComponent({
   components: {
     ProductList,
     BasePagination,
     ProductFilter,
     PreloaderPic,
   },
-  data() {
-    return {
-      page: 1,
-      productsPerPage: 3,
-      priceFrom: 0,
-      priceTo: 0,
-      categoryId: 0,
-      colorCheck: null,
-      productsData: null,
-      productsLoading: true,
-      productsLoadingFailed: false,
-    };
-  },
-  computed: {
-    productsPageList() {
-      return this.productsData
-        ? this.productsData.items.map((product) => {
+
+  setup() {
+    const productsData = ref(null);
+
+    const productsPageList = computed(() => {
+      return productsData.value
+        ? productsData.value.items.map((product) => {
             return {
               ...product,
               imageSrc: product.image.file.url,
             };
           })
         : [];
-    },
-    countProducts() {
-      return this.productsData ? this.productsData.pagination.total : [];
-    },
-  },
-  methods: {
-    loadProducts() {
-      this.productsLoading = true;
-      this.productsLoadingFailed = false;
-      clearTimeout(this.loadProductsTimer);
-      this.loadProductsTimer = setTimeout(() => {
+    });
+    const countProducts = computed(() => {
+      return productsData.value ? productsData.value.pagination.total : [];
+    });
+
+    const productsLoading = ref(true);
+    const productsLoadingFailed = ref(false);
+    const page = ref(1);
+    const productsPerPage = ref(3);
+    const priceFrom = ref(0);
+    const priceTo = ref(0);
+    const categoryId = ref(0);
+    const colorCheck = ref(null);
+    const loadProductsTimer = ref(null);
+
+    const loadProducts = () => {
+      productsLoading.value = true;
+      productsLoadingFailed.value = false;
+      clearTimeout(loadProductsTimer.value);
+      loadProductsTimer.value = setTimeout(() => {
         axios
           .get(API_BASE_URL + `/api/products`, {
             params: {
-              page: this.page,
-              limit: this.productsPerPage,
-              categoryId: this.categoryId,
-              minPrice: this.priceFrom,
-              maxPrice: this.priceTo,
-              colorId: this.colorCheck,
+              page: page.value,
+              limit: productsPerPage.value,
+              categoryId: categoryId.value,
+              minPrice: priceFrom.value,
+              maxPrice: priceTo.value,
+              colorId: colorCheck.value,
             },
           })
-          .then((response) => (this.productsData = response.data))
-          .catch(() => (this.productsLoadingFailed = true))
-          .then(() => (this.productsLoading = false));
+          .then((response) => (productsData.value = response.data))
+          .catch(() => (productsLoadingFailed.value = true))
+          .then(() => (productsLoading.value = false));
       }, 500);
-    },
+    };
+
+    watch(
+      [page, categoryId, priceFrom, priceTo, colorCheck],
+      () => {
+        loadProducts();
+      },
+      {
+        immediate: true,
+      }
+    );
+    return {
+      priceFrom,
+      priceTo,
+      categoryId,
+      colorCheck,
+      productsLoadingFailed,
+      loadProducts,
+      productsPageList,
+      page,
+      countProducts,
+      productsPerPage,
+      productsLoading,
+    };
   },
-  watch: {
-    page() {
-      this.loadProducts();
-    },
-    categoryId() {
-      this.loadProducts();
-    },
-    priceFrom() {
-      this.loadProducts();
-    },
-    priceTo() {
-      this.loadProducts();
-    },
-    colorCheck() {
-      this.loadProducts();
-    },
-  },
-  created() {
-    this.loadProducts();
-  },
-};
+});
 </script>

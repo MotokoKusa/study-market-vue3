@@ -176,66 +176,75 @@
 <script>
 import { API_BASE_URL } from "@/config";
 import axios from "axios";
-export default {
-  name: "ProductFilter",
-  data() {
-    return {
-      currentPriceFrom: 0,
-      currentPriceTo: 0,
-      currentCategoryId: 0,
-      currentCheckColor: null,
-      categoriesData: null,
-      colorsData: null,
-    };
-  },
+import { computed, defineComponent, ref, toRefs, watch } from "vue";
+
+export default defineComponent({
   props: ["priceFrom", "priceTo", "categoryId", "checkColor"],
-  computed: {
-    categories() {
-      return this.categoriesData ? this.categoriesData.items : [];
-    },
-    colors() {
-      return this.colorsData ? this.colorsData.items : [];
-    },
-  },
-  methods: {
-    submit() {
-      this.$emit("update:priceFrom", this.currentPriceFrom);
-      this.$emit("update:priceTo", this.currentPriceTo);
-      this.$emit("update:categoryId", this.currentCategoryId);
-      this.$emit("update:checkColor", this.currentCheckColor);
-    },
-    reset() {
-      this.$emit("update:priceFrom", null);
-      this.$emit("update:priceTo", null);
-      this.$emit("update:categoryId", null);
-      this.$emit("update:checkColor", null);
-    },
-    loadCategories() {
+
+  setup(props, { emit }) {
+    const categoriesData = ref([]);
+    const categories = computed(() => {
+      return categoriesData.value ? categoriesData.value.items : [];
+    });
+
+    const colorsData = ref([]);
+    const colors = computed(() => {
+      return colorsData.value ? colorsData.value.items : [];
+    });
+
+    const currentPriceFrom = ref(0);
+    const currentPriceTo = ref(0);
+    const currentCategoryId = ref(0);
+    const currentCheckColor = ref(null);
+
+    const submit = () => {
+      emit("update:priceFrom", currentPriceFrom.value);
+      emit("update:priceTo", currentPriceTo.value);
+      emit("update:categoryId", currentCategoryId.value);
+      emit("update:checkColor", currentCheckColor.value);
+    };
+    const reset = () => {
+      emit("update:priceFrom", 0);
+      emit("update:priceTo", 0);
+      emit("update:categoryId", 0);
+      emit("update:checkColor", null);
+    };
+    const loadCategories = () => {
       axios.get(API_BASE_URL + "/api/productCategories").then((response) => {
-        this.categoriesData = response.data;
+        categoriesData.value = response.data;
       });
       axios.get(API_BASE_URL + "/api/colors").then((response) => {
-        this.colorsData = response.data;
+        colorsData.value = response.data;
       });
-    },
+    };
+
+    const { priceFrom, priceTo, categoryId, checkColor } = toRefs(props);
+
+    watch(priceFrom, (val) => {
+      currentPriceFrom.value = val;
+    });
+    watch(priceTo, (val) => {
+      currentPriceTo.value = val;
+    });
+    watch(categoryId, (val) => {
+      currentCategoryId.value = val;
+    });
+    watch(checkColor, (val) => {
+      currentCheckColor.value = val;
+    });
+
+    loadCategories();
+
+    return {
+      submit,
+      currentPriceFrom,
+      currentPriceTo,
+      currentCategoryId,
+      categories,
+      colors,
+      currentCheckColor,
+      reset,
+    };
   },
-  watch: {
-    priceFrom(value) {
-      this.currentPriceFrom = value;
-    },
-    priceTo(value) {
-      this.currentPriceTo = value;
-    },
-    categoryId(value) {
-      this.currentCategoryId = value;
-    },
-    checkColor(value) {
-      this.currentCheckColor = value;
-    },
-  },
-  created() {
-    this.loadCategories();
-  },
-};
+});
 </script>
-<style scoped></style>

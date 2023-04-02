@@ -13,13 +13,14 @@
 </template>
 
 <script>
-export default {
-  name: "BaseBreadcrumbs",
+import { defineComponent } from "vue";
+
+export default defineComponent({
   props: {
     crumbs: {
       type: Array,
       default: () => [],
     },
   },
-};
+});
 </script>

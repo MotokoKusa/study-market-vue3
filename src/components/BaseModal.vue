@@ -61,58 +61,6 @@ export default defineComponent({
     };
   },
 });
-
-// export default {
-//   name: "BaseModal",
-//   props: {
-//     open: {
-//       type: Boolean,
-//     },
-//   },
-//   methods: {
-//     doClose() {
-//       this.$emit("update:open", false);
-//     },
-//     onOutsideClick($event) {
-//       if (
-//         $event.target !== this.$refs.content &&
-//         $event.target.contains(this.$refs.content)
-//       ) {
-//         this.doClose();
-//       }
-//     },
-//     checkBlackoutState() {
-//       if (!openedCount) {
-//         atleastOneOpen = false;
-//         document.body.style.overflow = null;
-//         document.body.style.paddingRight = null;
-//       } else if (!atleastOneOpen && openedCount === 1) {
-//         atleastOneOpen = true;
-//         document.body.style.paddingRight =
-//           window.innerWidth - document.documentElement.clientWidth + "px";
-//         document.body.style.overflow = "hidden";
-//       }
-//     },
-//   },
-//   watch: {
-//     open: {
-//       handler(isOpen) {
-//         if (isOpen) {
-//           openedCount += 1;
-//         } else {
-//           openedCount -= 1;
-//         }
-//         this.checkBlackoutState();
-//       },
-//     },
-//   },
-//   created() {
-//     if (this.open) {
-//       openedCount += 1;
-//       this.checkBlackoutState();
-//     }
-//   },
-// };
 </script>
 
 <style lang="scss" scoped>

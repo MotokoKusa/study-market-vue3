@@ -41,27 +41,31 @@
 </template>
 
 <script>
-export default {
-  name: "BasePagination",
+import { computed, defineComponent } from "vue";
+
+export default defineComponent({
   props: ["modelValue", "count", "perPage"],
-  computed: {
-    pages() {
-      return Math.ceil(this.count / this.perPage);
-    },
-    page() {
-      return this.modelValue;
-    },
+  setup(props, { emit }) {
+    const pages = computed(() => {
+      return Math.ceil(props.count / props.perPage);
+    });
+    const page = computed(() => props.modelValue);
+
+    const paginate = (page) => emit("update:modelValue", page);
+    const btnClickNext = (val) => {
+      if (pages.value !== page.value) paginate(val + 1);
+    };
+    const btnClickPrev = (val) => {
+      if (page.value !== 1) paginate(val - 1);
+    };
+
+    return {
+      pages,
+      page,
+      paginate,
+      btnClickPrev,
+      btnClickNext,
+    };
   },
-  methods: {
-    paginate(page) {
-      this.$emit("update:modelValue", page);
-    },
-    btnClickNext(page) {
-      if (this.pages !== this.page) this.paginate(page + 1);
-    },
-    btnClickPrev(page) {
-      if (this.page !== 1) this.paginate(page - 1);
-    },
-  },
-};
+});
 </script>

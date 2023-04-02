@@ -17,7 +17,7 @@
     <b class="product__price"> {{ totalPriceProduct }} ₽ </b>
 
     <button
-      @click.prevent="deleteProductToCart(item.productId)"
+      @click.prevent="deleteProduct(item.productId)"
       class="product__del button-del"
       type="button"
       aria-label="Удалить товар из корзины"
@@ -30,41 +30,45 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { useStore } from "vuex";
 import numberFormat from "@/helpers/numberFormat";
 import CustomCounter from "@/components/CustomCounter";
+import { computed, defineComponent, watch } from "vue";
 
-export default {
-  name: "CartItem",
+export default defineComponent({
   components: {
     CustomCounter,
   },
   props: ["item"],
-  computed: {
-    totalPriceProduct() {
-      return numberFormat(this.item.product.price * this.item.quantity);
-    },
-    quantity: {
+  setup(props) {
+    const store = useStore();
+    const totalPriceProduct = computed(() => {
+      return numberFormat(props.item.product.price * props.item.quantity);
+    });
+    const quantity = computed({
       get() {
-        return this.item.quantity;
+        return props.item.quantity;
       },
       set(value) {
-        this.$store.dispatch("updateCartProductAmount", {
-          productId: this.item.productId,
+        store.dispatch("updateCartProductAmount", {
+          productId: props.item.productId,
           quantity: value,
         });
       },
-    },
-  },
-  watch: {
-    quantity(val) {
+    });
+
+    watch(quantity, (val) => {
       if (!val) {
-        this.deleteProductToCart(this.item.productId);
+        store.dispatch("deleteProductToCart", props.item.productId);
       }
-    },
+    });
+
+    const deleteProduct = (val) => store.dispatch("deleteProductToCart", val);
+    return {
+      totalPriceProduct,
+      quantity,
+      deleteProduct,
+    };
   },
-  methods: {
-    ...mapActions(["deleteProductToCart"]),
-  },
-};
+});
 </script>
