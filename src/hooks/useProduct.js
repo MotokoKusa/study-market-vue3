@@ -9,7 +9,7 @@ export default function () {
   const product = computed(() => {
     return {
       ...productsData.value,
-      imageSrc: productsData.value.image.file.url,
+      imageSrc: productsData.value.preview.file.url,
     };
   });
   const category = computed(() => {

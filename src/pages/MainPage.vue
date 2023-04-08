@@ -2,7 +2,7 @@
   <main class="content container">
     <div class="content__top content__top--catalog">
       <h1 class="content__title">Каталог</h1>
-      <span class="content__info"> 152 товара </span>
+      <span class="content__info"> {{ messageTotalProducts }} </span>
     </div>
 
     <div class="content__catalog">
@@ -38,6 +38,7 @@ import ProductList from "@/components/ProductList.vue";
 import BasePagination from "@/components/BasePagination";
 import ProductFilter from "@/components/ProductFilter";
 import { computed, defineComponent, ref, watch } from "vue";
+import wordFormat from "@/helpers/wordFormat";
 
 export default defineComponent({
   components: {
@@ -55,7 +56,7 @@ export default defineComponent({
         ? productsData.value.items.map((product) => {
             return {
               ...product,
-              imageSrc: product.image.file.url,
+              imageSrc: product?.preview?.file?.url,
             };
           })
         : [];
@@ -67,27 +68,43 @@ export default defineComponent({
     const productsLoading = ref(true);
     const productsLoadingFailed = ref(false);
     const page = ref(1);
-    const productsPerPage = ref(3);
+    const productsPerPage = ref(12);
     const priceFrom = ref(0);
     const priceTo = ref(0);
     const categoryId = ref(0);
     const colorCheck = ref(null);
     const loadProductsTimer = ref(null);
+    const totalProducts = computed(() => productsData.value?.pagination?.total);
+    const messageTotalProducts = computed(() => {
+      let wordsCart = ["товар", "товара", "товаров"];
+      if (!totalProducts.value) return null;
+      return (
+        totalProducts.value + " " + wordFormat(totalProducts.value, wordsCart)
+      );
+    });
 
     const loadProducts = () => {
       productsLoading.value = true;
       productsLoadingFailed.value = false;
       clearTimeout(loadProductsTimer.value);
+
+      const payload = {
+        page: page.value,
+        limit: productsPerPage.value,
+        categoryId: categoryId.value,
+        colorId: colorCheck.value,
+      };
+      if (priceFrom.value) {
+        payload.minPrice = priceFrom.value;
+      }
+      if (priceTo.value) {
+        payload.maxPrice = priceTo.value;
+      }
       loadProductsTimer.value = setTimeout(() => {
         axios
           .get(API_BASE_URL + `/api/products`, {
             params: {
-              page: page.value,
-              limit: productsPerPage.value,
-              categoryId: categoryId.value,
-              minPrice: priceFrom.value,
-              maxPrice: priceTo.value,
-              colorId: colorCheck.value,
+              ...payload,
             },
           })
           .then((response) => (productsData.value = response.data))
@@ -111,6 +128,7 @@ export default defineComponent({
       categoryId,
       colorCheck,
       productsLoadingFailed,
+      messageTotalProducts,
       loadProducts,
       productsPageList,
       page,
