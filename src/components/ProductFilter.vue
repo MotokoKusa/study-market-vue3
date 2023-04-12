@@ -68,97 +68,34 @@
         </ul>
       </fieldset>
 
-      <fieldset class="form__block">
-        <legend class="form__legend">Объемб в ГБ</legend>
+      <fieldset
+        class="form__block"
+        v-for="el in productPropsData?.productProps"
+        :key="el.id"
+      >
+        <legend class="form__legend">{{ el.title }}</legend>
         <ul class="check-list">
-          <li class="check-list__item">
+          <li
+            class="check-list__item"
+            v-for="(item, idx) in el.availableValues"
+            :key="idx"
+          >
             <label class="check-list__label">
               <input
                 class="check-list__check sr-only"
                 type="checkbox"
                 name="volume"
-                value="8"
-                checked=""
+                v-model="item.isChecked"
+                :checked="item.isChecked"
               />
               <span class="check-list__desc">
-                8
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label class="check-list__label">
-              <input
-                class="check-list__check sr-only"
-                type="checkbox"
-                name="volume"
-                value="16"
-              />
-              <span class="check-list__desc">
-                16
-                <span>(461)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label class="check-list__label">
-              <input
-                class="check-list__check sr-only"
-                type="checkbox"
-                name="volume"
-                value="32"
-              />
-              <span class="check-list__desc">
-                32
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label class="check-list__label">
-              <input
-                class="check-list__check sr-only"
-                type="checkbox"
-                name="volume"
-                value="64"
-              />
-              <span class="check-list__desc">
-                64
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label class="check-list__label">
-              <input
-                class="check-list__check sr-only"
-                type="checkbox"
-                name="volume"
-                value="128"
-              />
-              <span class="check-list__desc">
-                128
-                <span>(313)</span>
-              </span>
-            </label>
-          </li>
-          <li class="check-list__item">
-            <label class="check-list__label">
-              <input
-                class="check-list__check sr-only"
-                type="checkbox"
-                name="volume"
-                value="264"
-              />
-              <span class="check-list__desc">
-                264
-                <span>(313)</span>
+                {{ item.value }}
+                <span>{{ item.productsCount }}</span>
               </span>
             </label>
           </li>
         </ul>
       </fieldset>
-
       <button class="filter__submit button button--primery" type="submit">
         Применить
       </button>
@@ -179,15 +116,15 @@ import axios from "axios";
 import { computed, defineComponent, ref, toRefs, watch } from "vue";
 
 export default defineComponent({
-  props: ["priceFrom", "priceTo", "categoryId", "checkColor"],
+  props: ["priceFrom", "priceTo", "categoryId", "checkColor", "productProps"],
 
   setup(props, { emit }) {
-    const categoriesData = ref([]);
+    const categoriesData = ref({});
     const categories = computed(() => {
       return categoriesData.value ? categoriesData.value.items : [];
     });
 
-    const colorsData = ref([]);
+    const colorsData = ref({});
     const colors = computed(() => {
       return colorsData.value ? colorsData.value.items : [];
     });
@@ -196,26 +133,72 @@ export default defineComponent({
     const currentPriceTo = ref(0);
     const currentCategoryId = ref(0);
     const currentCheckColor = ref(null);
+    const productPropsData = ref({});
 
     const submit = () => {
+      const productPropsClone = JSON.parse(
+        JSON.stringify(productPropsData.value)
+      );
       emit("update:priceFrom", currentPriceFrom.value);
       emit("update:priceTo", currentPriceTo.value);
       emit("update:categoryId", currentCategoryId.value);
       emit("update:checkColor", currentCheckColor.value);
+      emit("update:productProps", productPropsClone);
     };
     const reset = () => {
       emit("update:priceFrom", 0);
       emit("update:priceTo", 0);
       emit("update:categoryId", 0);
       emit("update:checkColor", null);
+      emit("update:productProps", []);
     };
-    const loadCategories = () => {
-      axios.get(API_BASE_URL + "/api/productCategories").then((response) => {
-        categoriesData.value = response.data;
-      });
-      axios.get(API_BASE_URL + "/api/colors").then((response) => {
-        colorsData.value = response.data;
-      });
+
+    const loadProductCategories = () => {
+      try {
+        axios.get(API_BASE_URL + "/api/productCategories").then((response) => {
+          categoriesData.value = response.data;
+        });
+      } catch (e) {
+        console.error(e);
+        categoriesData.value = {};
+      }
+    };
+
+    const loadColors = () => {
+      try {
+        axios.get(API_BASE_URL + "/api/colors").then((response) => {
+          colorsData.value = response.data;
+        });
+      } catch (e) {
+        console.error(e);
+        colorsData.value = {};
+      }
+    };
+
+    const loadCategories = async () => {
+      await loadProductCategories();
+      await loadColors();
+    };
+
+    const loadProductProps = (categoryId) => {
+      try {
+        axios
+          .get(API_BASE_URL + "/api/productCategories/" + categoryId)
+          .then((response) => {
+            productPropsData.value = response.data;
+            if (
+              productPropsData.value.productProps.length &&
+              productPropsData.value.productProps
+            ) {
+              productPropsData.value.productProps.map((el) => {
+                return el.availableValues.map((el) => (el.isChecked = false));
+              });
+            }
+          });
+      } catch (e) {
+        console.error(e);
+        productPropsData.value.data = {};
+      }
     };
 
     const { priceFrom, priceTo, categoryId, checkColor } = toRefs(props);
@@ -233,6 +216,14 @@ export default defineComponent({
       currentCheckColor.value = val;
     });
 
+    watch(currentCategoryId, (val) => {
+      if (val) {
+        loadProductProps(val);
+      } else {
+        productPropsData.value = {};
+      }
+    });
+
     loadCategories();
 
     return {
@@ -244,6 +235,7 @@ export default defineComponent({
       colors,
       currentCheckColor,
       reset,
+      productPropsData,
     };
   },
 });

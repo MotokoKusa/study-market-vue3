@@ -11,6 +11,7 @@
         v-model:price-to="priceTo"
         v-model:category-id="categoryId"
         v-model:check-color="colorCheck"
+        v-model:product-props="productProps"
       />
       <section class="catalog">
         <preloader-pic v-if="productsLoading" />
@@ -20,7 +21,7 @@
         </div>
         <product-list v-if="!productsLoading" :list="productsPageList" />
         <base-pagination
-          v-if="!productsLoading"
+          v-if="!productsLoading && productsPageList.length"
           v-model="page"
           :count="countProducts"
           :per-page="productsPerPage"
@@ -73,6 +74,7 @@ export default defineComponent({
     const priceTo = ref(0);
     const categoryId = ref(0);
     const colorCheck = ref(null);
+    const productProps = ref([]);
     const loadProductsTimer = ref(null);
     const totalProducts = computed(() => productsData.value?.pagination?.total);
     const messageTotalProducts = computed(() => {
@@ -87,6 +89,29 @@ export default defineComponent({
       productsLoading.value = true;
       productsLoadingFailed.value = false;
       clearTimeout(loadProductsTimer.value);
+      let productPropsPayload = {};
+
+      if (productProps.value?.productProps) {
+        const propsOfProduct = productProps.value?.productProps || [];
+        productPropsPayload = propsOfProduct
+          .map((el) => {
+            return {
+              ...el,
+              availableValues: el?.availableValues.filter((el) => {
+                return el.isChecked !== false;
+              }),
+            };
+          })
+          .filter((el) => el?.availableValues.length)
+          .reduce((obj, elem) => {
+            return {
+              ...obj,
+              [`props[${elem.code}]`]: elem.availableValues.map(
+                (el) => el.value
+              ),
+            };
+          }, {});
+      }
 
       const payload = {
         page: page.value,
@@ -100,11 +125,13 @@ export default defineComponent({
       if (priceTo.value) {
         payload.maxPrice = priceTo.value;
       }
+
       loadProductsTimer.value = setTimeout(() => {
         axios
           .get(API_BASE_URL + `/api/products`, {
             params: {
               ...payload,
+              ...productPropsPayload,
             },
           })
           .then((response) => (productsData.value = response.data))
@@ -114,7 +141,7 @@ export default defineComponent({
     };
 
     watch(
-      [page, categoryId, priceFrom, priceTo, colorCheck],
+      [page, priceFrom, priceTo, colorCheck, productProps],
       () => {
         loadProducts();
       },
@@ -127,6 +154,7 @@ export default defineComponent({
       priceTo,
       categoryId,
       colorCheck,
+      productProps,
       productsLoadingFailed,
       messageTotalProducts,
       loadProducts,
