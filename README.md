@@ -1,4 +1,4 @@
-# kek
+# study-market-vue3
 
 ## Project setup
 ```
