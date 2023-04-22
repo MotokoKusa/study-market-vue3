@@ -1,7 +1,9 @@
 <template>
   <header class="header">
     <div class="header__wrapper container">
-      <span class="header__info">Каталог</span>
+      <router-link class="header__info" :to="{ name: 'main' }"
+        >Каталог</router-link
+      >
 
       <router-link class="header__logo" :to="{ name: 'main' }">
         <img

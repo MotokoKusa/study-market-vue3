@@ -40,8 +40,13 @@ export default createStore({
       state.cartProductsData = items;
     },
     syncCartProducts(state) {
+      console.log("cartProductsData", state.cartProductsData);
       state.cartProducts = state.cartProductsData.map((item) => {
-        return { productId: item.product.id, quantity: item.quantity };
+        return {
+          productId: item.productOffer?.product?.id,
+          cartProductId: item.id,
+          quantity: item.quantity,
+        };
       });
     },
     updateCartLoading(state, boolean) {
@@ -54,15 +59,14 @@ export default createStore({
   getters: {
     cartDetailProducts(state) {
       return state.cartProducts.map((item) => {
-        const product = state.cartProductsData.find(
-          (el) => el.product.id === item.productId
-        ).product;
-
+        const productOffer = state.cartProductsData.find(
+          (el) => el.productOffer?.product.id === item.productId
+        ).productOffer;
         return {
           ...item,
           product: {
-            ...product,
-            imageSrc: product.image.file.url,
+            ...productOffer,
+            imageSrc: productOffer?.product?.preview?.file?.url,
           },
         };
       });
@@ -119,17 +123,21 @@ export default createStore({
           context.commit("updateCartProductsData", response.data.items);
           context.commit("syncCartProducts");
         })
-        .catch(() => context.commit("updateCartLoadingFailed", true))
+        .catch((e) => {
+          console.log(e);
+          context.commit("updateCartLoadingFailed", true);
+        })
         .then(() => context.commit("updateCartLoading", false));
     },
-    addProductToCart(context, { productId, quantity }) {
+    addProductToCart(context, { productOfferId, quantity, colorId }) {
       return new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
         return axios
           .post(
             API_BASE_URL + "/api/baskets/products",
             {
-              productId: productId,
+              productOfferId,
               quantity,
+              colorId,
             },
             {
               params: {
@@ -178,7 +186,7 @@ export default createStore({
             userAccessKey: context.state.userAccessKey,
           },
           data: {
-            productId: productId,
+            basketItemId: productId,
           },
         })
         .then((response) => {

@@ -17,7 +17,7 @@
     <b class="product__price"> {{ totalPriceProduct }} ₽ </b>
 
     <button
-      @click.prevent="deleteProduct(item.productId)"
+      @click.prevent="deleteProduct(item.cartProductId)"
       class="product__del button-del"
       type="button"
       aria-label="Удалить товар из корзины"

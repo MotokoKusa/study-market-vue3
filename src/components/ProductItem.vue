@@ -1,7 +1,11 @@
 <template>
   <li class="catalog__item">
     <router-link
-      :to="{ name: 'product', params: { id: item.id } }"
+      :to="{
+        name: 'product',
+        params: { id: item.id },
+        query: { offer: selectedOffersValue, color: selectedColor },
+      }"
       class="catalog__pic"
     >
       <img :src="item.imageSrc" :srcset="item.imageSrcset" :alt="item.title" />
@@ -9,14 +13,15 @@
     <h3 class="catalog__title" @click.prevent="openVisionQuickView(item.id)">
       <a href="#">{{ content.title }}</a>
     </h3>
-    <span class="catalog__price">{{ numberFormat(content.price) }} ₽</span>
+    <span class="catalog__price">{{ content.price }} ₽</span>
     <ul class="colors colors--black">
       <li v-for="el in item.colors" :key="el.id" class="colors__item">
         <label class="colors__label">
           <input
             class="colors__radio sr-only"
             type="radio"
-            :value="el.color.code"
+            :name="`${item.slug} colors`"
+            :value="el.color.id"
             v-model="selectedColor"
           />
           <span
@@ -32,8 +37,9 @@
           <input
             class="sizes__radio sr-only"
             type="radio"
-            name="sizes-2"
-            :value="el"
+            :name="`${item.slug} offers`"
+            :value="el.value"
+            :checked="el.value === selectedOffersValue"
             v-model="selectedOffersValue"
           />
           <span class="sizes__value"> {{ el.value }} </span>
@@ -42,7 +48,11 @@
     </ul>
   </li>
   <base-modal v-model:open="isQuickViewOpen">
-    <product-quick-view :product-id="currentProductId" />
+    <product-quick-view
+      :product-id="currentProductId"
+      :selected-offer="selectedOffersValue"
+      :selected-color="selectedColor"
+    />
   </base-modal>
 </template>
 
@@ -84,20 +94,19 @@ export default defineComponent({
           {
             title: current.title,
             value: current?.propValues.at(0)?.value,
-            price: current.price,
-            isActive: false,
+            price: numberFormat(current.price),
           },
         ];
       }, []);
     });
-    const selectedOffersValue = ref(null);
+    const selectedOffersValue = ref(offersPrice.value.at(0)?.value || null);
 
-    const selectedColor = ref(null);
+    const selectedColor = ref(props.item.colors.at(0)?.color?.id || null);
 
     const content = computed(() => {
-      if (!selectedOffersValue.value) return props.item;
+      if (!selectedOffersValue.value) return offersPrice.value.at(0);
       return offersPrice.value.find(
-        (el) => el.value === selectedOffersValue.value.value
+        (el) => el.value === selectedOffersValue.value
       );
     });
 

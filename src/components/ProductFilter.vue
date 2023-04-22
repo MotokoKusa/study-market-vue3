@@ -102,7 +102,7 @@
       <button
         class="filter__reset button button--second"
         type="button"
-        @click="reset"
+        @click.prevent="reset"
       >
         Сбросить
       </button>
@@ -113,12 +113,13 @@
 <script>
 import { API_BASE_URL } from "@/config";
 import axios from "axios";
-import { computed, defineComponent, ref, toRefs, watch } from "vue";
+import { computed, defineComponent, onMounted, ref, watch } from "vue";
+import { useRouter, useRoute } from "vue-router/dist/vue-router";
 
 export default defineComponent({
-  props: ["priceFrom", "priceTo", "categoryId", "checkColor", "productProps"],
-
   setup(props, { emit }) {
+    const router = useRouter();
+    const route = useRoute();
     const categoriesData = ref({});
     const categories = computed(() => {
       return categoriesData.value ? categoriesData.value.items : [];
@@ -131,26 +132,32 @@ export default defineComponent({
 
     const currentPriceFrom = ref(0);
     const currentPriceTo = ref(0);
-    const currentCategoryId = ref(0);
+    const currentCategoryId = ref(
+      route.query.categoryId ? route.query.categoryId : 0
+    );
     const currentCheckColor = ref(null);
     const productPropsData = ref({});
 
     const submit = () => {
-      const productPropsClone = JSON.parse(
-        JSON.stringify(productPropsData.value)
-      );
-      emit("update:priceFrom", currentPriceFrom.value);
-      emit("update:priceTo", currentPriceTo.value);
-      emit("update:categoryId", currentCategoryId.value);
-      emit("update:checkColor", currentCheckColor.value);
-      emit("update:productProps", productPropsClone);
+      router.replace({ query: { categoryId: currentCategoryId.value } });
+      emit("get-products", {
+        priceFrom: currentPriceFrom.value,
+        priceTo: currentPriceTo.value,
+        categoryId: currentCategoryId.value,
+        checkColor: currentCheckColor.value,
+        productProps: productPropsData.value?.productProps,
+      });
     };
     const reset = () => {
-      emit("update:priceFrom", 0);
-      emit("update:priceTo", 0);
-      emit("update:categoryId", 0);
-      emit("update:checkColor", null);
-      emit("update:productProps", []);
+      router.replace();
+      currentPriceFrom.value = 0;
+      currentPriceTo.value = 0;
+      currentCategoryId.value = 0;
+      currentCheckColor.value = null;
+      productPropsData.value = [];
+      emit("get-products", {
+        categoryId: 0,
+      });
     };
 
     const loadProductCategories = () => {
@@ -200,31 +207,22 @@ export default defineComponent({
         productPropsData.value.data = {};
       }
     };
-
-    const { priceFrom, priceTo, categoryId, checkColor } = toRefs(props);
-
-    watch(priceFrom, (val) => {
-      currentPriceFrom.value = val;
-    });
-    watch(priceTo, (val) => {
-      currentPriceTo.value = val;
-    });
-    watch(categoryId, (val) => {
-      currentCategoryId.value = val;
-    });
-    watch(checkColor, (val) => {
-      currentCheckColor.value = val;
-    });
-
-    watch(currentCategoryId, (val) => {
-      if (val) {
-        loadProductProps(val);
-      } else {
-        productPropsData.value = {};
+    watch(
+      currentCategoryId,
+      (val) => {
+        if (val) {
+          loadProductProps(val);
+        } else {
+          productPropsData.value = {};
+        }
+      },
+      {
+        immediate: true,
       }
+    );
+    onMounted(() => {
+      loadCategories();
     });
-
-    loadCategories();
 
     return {
       submit,

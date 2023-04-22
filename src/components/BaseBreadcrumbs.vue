@@ -3,7 +3,7 @@
     <li class="breadcrumbs__item" v-for="(el, idx) in crumbs" :key="idx">
       <router-link
         v-if="el.name"
-        :to="{ name: el.name }"
+        :to="{ name: el.name, query: { categoryId: el.id } }"
         class="breadcrumbs__link"
         >{{ el.title }}</router-link
       >

@@ -5,7 +5,7 @@
       <div ref="contentElement" class="modal__wrap__content">
         <slot />
         <button type="button" class="modal__wrap__close" @click="doClose">
-          x
+          &#10006;
         </button>
       </div>
     </div>
@@ -96,9 +96,13 @@ export default defineComponent({
     }
     &__close {
       position: absolute;
-      top: -1.25em;
-      top: -1.25em;
-      padding: 10px;
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      padding: 5px;
+      top: 5px;
+      right: 5px;
+      cursor: pointer;
       line-height: 1;
     }
   }

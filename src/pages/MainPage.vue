@@ -6,13 +6,7 @@
     </div>
 
     <div class="content__catalog">
-      <product-filter
-        v-model:price-from="priceFrom"
-        v-model:price-to="priceTo"
-        v-model:category-id="categoryId"
-        v-model:check-color="colorCheck"
-        v-model:product-props="productProps"
-      />
+      <product-filter @get-products="loadProducts" />
       <section class="catalog">
         <preloader-pic v-if="productsLoading" />
         <div v-if="productsLoadingFailed">
@@ -38,7 +32,8 @@ import axios from "axios";
 import ProductList from "@/components/ProductList.vue";
 import BasePagination from "@/components/BasePagination";
 import ProductFilter from "@/components/ProductFilter";
-import { computed, defineComponent, ref, watch } from "vue";
+import { computed, defineComponent, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router/dist/vue-router";
 import wordFormat from "@/helpers/wordFormat";
 
 export default defineComponent({
@@ -50,6 +45,7 @@ export default defineComponent({
   },
 
   setup() {
+    const route = useRoute();
     const productsData = ref(null);
 
     const productsPageList = computed(() => {
@@ -70,11 +66,6 @@ export default defineComponent({
     const productsLoadingFailed = ref(false);
     const page = ref(1);
     const productsPerPage = ref(12);
-    const priceFrom = ref(0);
-    const priceTo = ref(0);
-    const categoryId = ref(0);
-    const colorCheck = ref(null);
-    const productProps = ref([]);
     const loadProductsTimer = ref(null);
     const totalProducts = computed(() => productsData.value?.pagination?.total);
     const messageTotalProducts = computed(() => {
@@ -85,14 +76,15 @@ export default defineComponent({
       );
     });
 
-    const loadProducts = () => {
+    const loadProducts = (fields) => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
       productsLoading.value = true;
       productsLoadingFailed.value = false;
       clearTimeout(loadProductsTimer.value);
       let productPropsPayload = {};
 
-      if (productProps.value?.productProps) {
-        const propsOfProduct = productProps.value?.productProps || [];
+      if (fields?.productProps) {
+        const propsOfProduct = fields?.productProps || [];
         productPropsPayload = propsOfProduct
           .map((el) => {
             return {
@@ -112,18 +104,17 @@ export default defineComponent({
             };
           }, {});
       }
-
       const payload = {
         page: page.value,
         limit: productsPerPage.value,
-        categoryId: categoryId.value,
-        colorId: colorCheck.value,
+        categoryId: fields?.categoryId ?? route.query.categoryId,
+        colorId: fields?.checkColor,
       };
-      if (priceFrom.value) {
-        payload.minPrice = priceFrom.value;
+      if (fields?.priceFrom) {
+        payload.minPrice = fields?.priceFrom;
       }
-      if (priceTo.value) {
-        payload.maxPrice = priceTo.value;
+      if (fields?.priceTo) {
+        payload.maxPrice = fields?.priceTo;
       }
 
       loadProductsTimer.value = setTimeout(() => {
@@ -140,21 +131,14 @@ export default defineComponent({
       }, 500);
     };
 
-    watch(
-      [page, priceFrom, priceTo, colorCheck, productProps],
-      () => {
-        loadProducts();
-      },
-      {
-        immediate: true,
-      }
-    );
+    watch(page, () => {
+      loadProducts();
+    });
+
+    onMounted(() => {
+      loadProducts();
+    });
     return {
-      priceFrom,
-      priceTo,
-      categoryId,
-      colorCheck,
-      productProps,
       productsLoadingFailed,
       messageTotalProducts,
       loadProducts,

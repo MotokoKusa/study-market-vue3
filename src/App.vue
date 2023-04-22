@@ -1,6 +1,6 @@
 <template>
   <s-header v-if="!isSomeOpen" />
-  <router-view :key="$route.fullPath" />
+  <router-view />
   <s-footer v-if="!isSomeOpen" />
   <div id="teleport-target"></div>
 </template>
@@ -22,3 +22,7 @@ export default {
   },
 };
 </script>
+
+<style lang="scss">
+@import "styles/style.scss";
+</style>
