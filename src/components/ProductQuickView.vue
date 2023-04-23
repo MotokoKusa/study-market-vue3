@@ -186,9 +186,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style lang="scss" scoped>
-.item {
-  grid-template-columns: 1fr;
-}
-</style>

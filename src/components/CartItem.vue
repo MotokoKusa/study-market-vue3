@@ -10,7 +10,21 @@
       />
     </div>
     <h3 class="product__title">{{ item.product.title }}</h3>
-    <span class="product__code"> Артикул: {{ item.productId }} </span>
+    <div class="product__code">
+      <span v-if="item.color" class="product__code__color">
+        Цвет:
+        <span
+          class="colors__value"
+          :style="{ 'background-color': item.color.code }"
+        ></span>
+        {{ item.color.title }}
+      </span>
+
+      <span v-if="item.prop && typesProps.color.code !== item.prop.code">
+        {{ item.prop.title }}: {{ item.prop.value }}
+      </span>
+      <span> Артикул: {{ item.cartProductId }} </span>
+    </div>
 
     <custom-counter v-model="quantity" />
 
@@ -33,6 +47,7 @@
 import { useStore } from "vuex";
 import numberFormat from "@/helpers/numberFormat";
 import CustomCounter from "@/components/CustomCounter";
+import typesProps from "@/helpers/typesProps";
 import { computed, defineComponent, watch } from "vue";
 
 export default defineComponent({
@@ -51,7 +66,7 @@ export default defineComponent({
       },
       set(value) {
         store.dispatch("updateCartProductAmount", {
-          productId: props.item.productId,
+          basketItemId: props.item.cartProductId,
           quantity: value,
         });
       },
@@ -59,7 +74,7 @@ export default defineComponent({
 
     watch(quantity, (val) => {
       if (!val) {
-        store.dispatch("deleteProductToCart", props.item.productId);
+        store.dispatch("deleteProductToCart", props.item.cartProductId);
       }
     });
 
@@ -68,6 +83,7 @@ export default defineComponent({
       totalPriceProduct,
       quantity,
       deleteProduct,
+      typesProps,
     };
   },
 });

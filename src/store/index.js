@@ -19,11 +19,10 @@ export default createStore({
       state.cartProducts = [];
       state.cartProductsData = [];
     },
-    updateCartProductAmount(state, { productId, quantity }) {
+    updateCartProductAmount(state, { basketItemId, quantity }) {
       const item = state.cartProducts.find(
-        (item) => item.productId === productId
+        (item) => item.cartProductId === basketItemId
       );
-
       if (item) {
         item.quantity = quantity;
       }
@@ -40,7 +39,6 @@ export default createStore({
       state.cartProductsData = items;
     },
     syncCartProducts(state) {
-      console.log("cartProductsData", state.cartProductsData);
       state.cartProducts = state.cartProductsData.map((item) => {
         return {
           productId: item.productOffer?.product?.id,
@@ -59,14 +57,20 @@ export default createStore({
   getters: {
     cartDetailProducts(state) {
       return state.cartProducts.map((item) => {
-        const productOffer = state.cartProductsData.find(
-          (el) => el.productOffer?.product.id === item.productId
-        ).productOffer;
+        const elem = state.cartProductsData.find(
+          (el) => el.id === item.cartProductId
+        );
         return {
           ...item,
+          color: elem?.color?.color,
+          prop: {
+            value: elem?.productOffer?.propValues?.at(0)?.value,
+            title: elem?.productOffer?.product?.mainProp?.title,
+            code: elem?.productOffer?.product?.mainProp?.code,
+          },
           product: {
-            ...productOffer,
-            imageSrc: productOffer?.product?.preview?.file?.url,
+            ...elem?.productOffer,
+            imageSrc: elem?.productOffer?.product?.preview?.file?.url,
           },
         };
       });
@@ -151,8 +155,8 @@ export default createStore({
           });
       });
     },
-    updateCartProductAmount(context, { productId, quantity }) {
-      context.commit("updateCartProductAmount", { productId, quantity });
+    updateCartProductAmount(context, { basketItemId, quantity }) {
+      context.commit("updateCartProductAmount", { basketItemId, quantity });
 
       if (quantity < 1) {
         return;
@@ -161,7 +165,7 @@ export default createStore({
         .put(
           API_BASE_URL + "/api/baskets/products",
           {
-            productId: productId,
+            basketItemId: basketItemId,
             quantity,
           },
           {

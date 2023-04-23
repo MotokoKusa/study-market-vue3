@@ -39,7 +39,13 @@
           >
             <b class="item__price"> {{ content.price }} ₽ </b>
 
-            <fieldset v-if="product.colors" class="form__block">
+            <fieldset
+              v-if="
+                product.colors &&
+                product.mainProp?.code !== typesProps.color.code
+              "
+              class="form__block"
+            >
               <legend class="form__legend">Цвет:</legend>
               <ul class="colors">
                 <li
@@ -124,6 +130,7 @@ import BaseModal from "@/components/BaseModal";
 import BaseTabs from "@/components/BaseTabs";
 import DescriptionTab from "@/components/tabs/DescriptionTab";
 import SpecificationsTab from "@/components/tabs/SpecificationsTab";
+import typesProps from "@/helpers/typesProps";
 import { computed, defineComponent, ref } from "vue";
 import { useRoute } from "vue-router/dist/vue-router";
 import useProduct from "@/hooks/useProduct";
@@ -181,6 +188,7 @@ export default defineComponent({
       tabs,
       switchTabs,
       selectedTab,
+      typesProps,
     };
   },
 });

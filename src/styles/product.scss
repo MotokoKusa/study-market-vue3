@@ -1,0 +1,18 @@
+.catalog__item {
+  .sizes {
+    margin-top: 10px;
+  }
+  .catalog__pic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    & img {
+      object-fit: unset;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+    }
+  }
+}
+

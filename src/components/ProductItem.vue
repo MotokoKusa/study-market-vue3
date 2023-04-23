@@ -14,7 +14,12 @@
       <a href="#">{{ content.title }}</a>
     </h3>
     <span class="catalog__price">{{ content.price }} ₽</span>
-    <ul class="colors colors--black">
+    <ul
+      v-if="
+        item.colors?.length && item.mainProp?.code !== typesProps.color.code
+      "
+      class="colors colors--black"
+    >
       <li v-for="el in item.colors" :key="el.id" class="colors__item">
         <label class="colors__label">
           <input
@@ -59,8 +64,8 @@
 <script>
 import numberFormat from "@/helpers/numberFormat";
 import BaseModal from "@/components/BaseModal";
+import typesProps from "@/helpers/typesProps";
 import { computed, defineAsyncComponent, defineComponent, ref } from "vue";
-// import productPropTypes from "@/types/ProductPropTypes";
 
 export default defineComponent({
   components: {
@@ -123,25 +128,8 @@ export default defineComponent({
       offersPrice,
       selectedOffersValue,
       numberFormat,
+      typesProps,
     };
   },
 });
 </script>
-
-<style lang="scss" scoped>
-.sizes {
-  margin-top: 10px;
-}
-.catalog__pic {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  & img {
-    object-fit: unset;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-  }
-}
-</style>
