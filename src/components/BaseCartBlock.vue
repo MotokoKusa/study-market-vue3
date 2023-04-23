@@ -2,19 +2,19 @@
   <div class="cart__block">
     <ul class="cart__orders">
       <li class="cart__order" v-for="item in products" :key="item.productId">
-        <h3>{{ item.product.title }}</h3>
+        <h3>{{ item.product?.title }}</h3>
         <b>{{ totalPriceProduct(item) }} ₽</b>
         <span>Количество: {{ item.quantity }}</span>
-        <span>Артикул: {{ item.product.id }}</span>
+        <span>Артикул: {{ item.product?.id }}</span>
       </li>
     </ul>
 
     <div v-if="isCartTotal" class="cart__total">
-      <p v-if="costDelivery">
-        Доставка: <b>{{ costDelivery }} ₽</b>
+      <p v-if="delivery">
+        {{ delivery.title }}: <b>{{ costDelivery }} ₽</b>
       </p>
       <p>
-        Итого: <b>{{ totalAmount }}</b> товара на сумму
+        Итого: <b>{{ totalAmount }}</b> {{ messageTotalProducts }} на сумму
         <b>{{ totalPrice }} ₽</b>
       </p>
     </div>
@@ -34,12 +34,13 @@
 <script>
 import numberFormat from "@/helpers/numberFormat";
 import { computed, defineComponent } from "vue";
+import wordFormat from "@/helpers/wordFormat";
 
 export default defineComponent({
   props: {
     cartData: {
       type: Object,
-      default: () => {},
+      default: () => ({}),
     },
     isButton: {
       type: Boolean,
@@ -52,26 +53,36 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
-    const costDelivery = computed(() => props.cartData?.costDelivery || null);
+    const delivery = computed(() => props.cartData?.costDelivery || null);
     const totalAmount = computed(() => props.cartData?.totalAmount || null);
     const totalPrice = computed(() => props.cartData?.totalPrice || null);
     const isCartTotal = computed(() => totalAmount.value && totalPrice.value);
     const products = computed(() => props.cartData?.products || []);
+    const costDelivery = computed(() => {
+      return delivery.value.price !== "0" ? delivery.value.price : "бесплатно";
+    });
+    const messageTotalProducts = computed(() => {
+      const wordsCart = ["товар", "товара", "товаров"];
+      if (!totalPrice.value) return "";
+      return wordFormat(totalPrice.value, wordsCart);
+    });
 
     const onClick = () => emit("onClick");
     const totalPriceProduct = (item) => {
-      const total = item.product.price * item.quantity;
+      const total = item.product?.price * item.quantity;
       return numberFormat(total);
     };
 
     return {
-      costDelivery,
+      delivery,
       totalAmount,
       totalPrice,
       isCartTotal,
       products,
       onClick,
       totalPriceProduct,
+      costDelivery,
+      messageTotalProducts,
     };
   },
 });

@@ -18,7 +18,7 @@
           v-if="!productsLoading && productsPageList.length"
           v-model="page"
           :count="countProducts"
-          :per-page="productsPerPage"
+          v-model:per-page="productsPerPage"
         />
       </section>
     </div>
@@ -69,7 +69,7 @@ export default defineComponent({
     const loadProductsTimer = ref(null);
     const totalProducts = computed(() => productsData.value?.pagination?.total);
     const messageTotalProducts = computed(() => {
-      let wordsCart = ["товар", "товара", "товаров"];
+      const wordsCart = ["товар", "товара", "товаров"];
       if (!totalProducts.value) return null;
       return (
         totalProducts.value + " " + wordFormat(totalProducts.value, wordsCart)
@@ -133,6 +133,13 @@ export default defineComponent({
 
     watch(page, () => {
       loadProducts();
+    });
+
+    watch(productsPerPage, (val) => {
+      clearTimeout(loadProductsTimer.value);
+      if (val || val === 0) {
+        loadProductsTimer.value = setTimeout(() => loadProducts(), 500);
+      }
     });
 
     onMounted(() => {

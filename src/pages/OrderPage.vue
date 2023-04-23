@@ -46,60 +46,16 @@
           </div>
 
           <div class="cart__options">
-            <h3 class="cart__title">Доставка</h3>
-            <ul class="cart__options options">
-              <li class="options__item">
-                <label class="options__label">
-                  <input
-                    class="options__radio sr-only"
-                    type="radio"
-                    name="delivery"
-                    value="0"
-                    checked=""
-                  />
-                  <span class="options__value">
-                    Самовывоз <b>бесплатно</b>
-                  </span>
-                </label>
-              </li>
-              <li class="options__item">
-                <label class="options__label">
-                  <input
-                    class="options__radio sr-only"
-                    type="radio"
-                    name="delivery"
-                    value="500"
-                  />
-                  <span class="options__value"> Курьером <b>500 ₽</b> </span>
-                </label>
-              </li>
-            </ul>
-
-            <h3 class="cart__title">Оплата</h3>
-            <ul class="cart__options options">
-              <li class="options__item">
-                <label class="options__label">
-                  <input
-                    class="options__radio sr-only"
-                    type="radio"
-                    name="pay"
-                    value="card"
-                  />
-                  <span class="options__value"> Картой при получении </span>
-                </label>
-              </li>
-              <li class="options__item">
-                <label class="options__label">
-                  <input
-                    class="options__radio sr-only"
-                    type="radio"
-                    name="pay"
-                    value="cash"
-                  />
-                  <span class="options__value"> Наличными при получении </span>
-                </label>
-              </li>
-            </ul>
+            <base-options
+              title="Доставка"
+              :options-data="deliveryData"
+              v-model="formData.delivery"
+            />
+            <base-options
+              title="Оплата"
+              :options-data="paymentsData"
+              v-model="formData.payment"
+            />
           </div>
         </div>
         <div v-else class="cart__field">
@@ -126,11 +82,20 @@ import BaseFormTextarea from "@/components/BaseFormTextarea";
 import PreloaderPic from "@/components/PreloaderPic";
 import BaseCartBlock from "@/components/BaseCartBlock";
 import BaseBreadcrumbs from "@/components/BaseBreadcrumbs";
+import BaseOptions from "@/components/BaseOptions";
 import { useStore } from "vuex";
 import axios from "axios";
 import { API_BASE_URL } from "@/config";
-import { computed, defineComponent, reactive, ref } from "vue";
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  reactive,
+  ref,
+  watchEffect,
+} from "vue";
 import router from "@/router";
+import numberFormat from "@/helpers/numberFormat";
 
 export default defineComponent({
   components: {
@@ -139,6 +104,7 @@ export default defineComponent({
     BaseFormTextarea,
     PreloaderPic,
     BaseCartBlock,
+    BaseOptions,
   },
 
   setup() {
@@ -178,6 +144,8 @@ export default defineComponent({
           API_BASE_URL + "/api/orders",
           {
             ...formData,
+            deliveryTypeId: formData.delivery?.id,
+            paymentTypeId: formData.payment?.id,
           },
           {
             params: {
@@ -200,6 +168,56 @@ export default defineComponent({
           formErrorMessage.value = error.response.data.error.message || "";
         });
     };
+
+    const deliveryData = ref([]);
+
+    const getDelivery = () => {
+      try {
+        axios
+          .get(API_BASE_URL + "/api/deliveries")
+          .then((response) => {
+            deliveryData.value = response.data.map((el) => {
+              return {
+                ...el,
+                price: numberFormat(el.price),
+              };
+            });
+          })
+          .then(() => {
+            getPayments(formData.delivery?.id);
+          });
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    const paymentsData = ref([]);
+
+    const getPayments = (deliveryTypeId) => {
+      try {
+        axios
+          .get(API_BASE_URL + "/api/payments", {
+            params: {
+              deliveryTypeId: deliveryTypeId,
+            },
+          })
+          .then((response) => {
+            paymentsData.value = response.data;
+          });
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    watchEffect(() => {
+      if (formData.delivery?.id) {
+        costDelivery.value = formData.delivery;
+        getPayments(formData.delivery.id);
+      }
+    });
+
+    onMounted(() => {
+      getDelivery();
+    });
     return {
       cartData,
       breadcrumbsData,
@@ -208,6 +226,8 @@ export default defineComponent({
       isSending,
       formError,
       formErrorMessage,
+      deliveryData,
+      paymentsData,
     };
   },
 });

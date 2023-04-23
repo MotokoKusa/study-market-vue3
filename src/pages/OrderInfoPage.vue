@@ -1,17 +1,7 @@
 <template>
   <main class="content container">
     <div class="content__top">
-      <ul class="breadcrumbs">
-        <li class="breadcrumbs__item">
-          <a class="breadcrumbs__link" href="index.html"> Каталог </a>
-        </li>
-        <li class="breadcrumbs__item">
-          <a class="breadcrumbs__link" href="cart.html"> Корзина </a>
-        </li>
-        <li class="breadcrumbs__item">
-          <a class="breadcrumbs__link"> Оформление заказа </a>
-        </li>
-      </ul>
+      <base-breadcrumbs :crumbs="breadcrumbsData" />
 
       <h1 class="content__title">
         Заказ оформлен <span>№ {{ orderInfo?.basket?.id }}</span>
@@ -47,21 +37,31 @@
 
 <script>
 import BaseCartBlock from "@/components/BaseCartBlock";
+import BaseBreadcrumbs from "@/components/BaseBreadcrumbs";
 import { useStore } from "vuex";
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent } from "vue";
 import { useRoute } from "vue-router/dist/vue-router";
 
 export default defineComponent({
   components: {
     BaseCartBlock,
+    BaseBreadcrumbs,
   },
   setup() {
-    const costDelivery = ref(500);
     const store = useStore();
     const route = useRoute();
     const orderInfo = computed(() => store.getters.orderInfo);
     const products = computed(() => {
-      return orderInfo.value?.basket.items || [];
+      return (
+        orderInfo.value?.basket.items.map((el) => {
+          return {
+            ...el,
+            product: {
+              ...el.productOffer,
+            },
+          };
+        }) || []
+      );
     });
     const totalAmount = computed(() => {
       return products.value.reduce((amount, elem) => amount + elem.quantity, 0);
@@ -71,10 +71,18 @@ export default defineComponent({
       return orderInfo.value?.totalPrice;
     });
 
+    const breadcrumbsData = computed(() => {
+      return [
+        { title: "Каталог", name: "main" },
+        { title: "Корзина", name: "cart" },
+        { title: "Оформление заказа", name: "" },
+      ];
+    });
+
     const cartData = computed(() => {
       return {
         products: products.value,
-        costDelivery: costDelivery.value,
+        costDelivery: orderInfo.value?.deliveryType,
         totalAmount: totalAmount.value,
         totalPrice: totalPrice.value,
       };
@@ -88,7 +96,10 @@ export default defineComponent({
         },
         { title: "Телефон", description: orderInfo.value?.phone || "" },
         { title: "Email", description: orderInfo.value?.email || "" },
-        { title: "Способ оплаты", description: "картой при получении" },
+        {
+          title: "Способ оплаты",
+          description: orderInfo.value?.paymentType || "",
+        },
       ];
     });
 
@@ -100,6 +111,7 @@ export default defineComponent({
       infoBuyer,
       cartData,
       orderInfo,
+      breadcrumbsData,
     };
   },
 });

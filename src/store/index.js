@@ -128,7 +128,7 @@ export default createStore({
           context.commit("syncCartProducts");
         })
         .catch((e) => {
-          console.log(e);
+          console.error(e);
           context.commit("updateCartLoadingFailed", true);
         })
         .then(() => context.commit("updateCartLoading", false));
