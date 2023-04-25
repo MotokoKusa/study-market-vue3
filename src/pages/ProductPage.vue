@@ -39,13 +39,7 @@
           >
             <b class="item__price"> {{ content.price }} ₽ </b>
 
-            <fieldset
-              v-if="
-                product.colors &&
-                product.mainProp?.code !== typesProps.color.code
-              "
-              class="form__block"
-            >
+            <fieldset v-if="product.colors" class="form__block">
               <legend class="form__legend">Цвет:</legend>
               <ul class="colors">
                 <li

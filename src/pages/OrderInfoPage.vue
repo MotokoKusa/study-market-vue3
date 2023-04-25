@@ -4,7 +4,7 @@
       <base-breadcrumbs :crumbs="breadcrumbsData" />
 
       <h1 class="content__title">
-        Заказ оформлен <span>№ {{ orderInfo?.basket?.id }}</span>
+        Заказ оформлен <span>№ {{ orderInfo.id }}</span>
       </h1>
     </div>
 

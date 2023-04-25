@@ -14,12 +14,7 @@
       <a href="#">{{ content.title }}</a>
     </h3>
     <span class="catalog__price">{{ content.price }} ₽</span>
-    <ul
-      v-if="
-        item.colors?.length && item.mainProp?.code !== typesProps.color.code
-      "
-      class="colors colors--black"
-    >
+    <ul v-if="item.colors?.length" class="colors colors--black">
       <li v-for="el in item.colors" :key="el.id" class="colors__item">
         <label class="colors__label">
           <input

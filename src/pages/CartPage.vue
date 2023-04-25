@@ -23,7 +23,7 @@
           </ul>
         </div>
 
-        <div class="cart__block">
+        <div v-if="products.length" class="cart__block">
           <p class="cart__desc">
             Мы&nbsp;посчитаем стоимость доставки на&nbsp;следующем этапе
           </p>

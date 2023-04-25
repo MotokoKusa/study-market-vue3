@@ -100,6 +100,7 @@
         Применить
       </button>
       <button
+        v-if="isFilterSubmit"
         class="filter__reset button button--second"
         type="button"
         @click.prevent="reset"
@@ -137,8 +138,10 @@ export default defineComponent({
     );
     const currentCheckColor = ref(null);
     const productPropsData = ref({});
+    const isFilterSubmit = ref(false);
 
     const submit = () => {
+      isFilterSubmit.value = true;
       router.replace({ query: { categoryId: currentCategoryId.value } });
       emit("get-products", {
         priceFrom: currentPriceFrom.value,
@@ -149,6 +152,7 @@ export default defineComponent({
       });
     };
     const reset = () => {
+      isFilterSubmit.value = false;
       router.replace();
       currentPriceFrom.value = 0;
       currentPriceTo.value = 0;
@@ -234,6 +238,7 @@ export default defineComponent({
       currentCheckColor,
       reset,
       productPropsData,
+      isFilterSubmit,
     };
   },
 });
